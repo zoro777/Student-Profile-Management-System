@@ -1,27 +1,26 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox
 
 def open_student_dashboard(student):
     root = tk.Tk()
     root.title(f"Student Dashboard - {student.name}")
     root.geometry("400x400")
 
-    # Load username and email from users.txt
     user_data = {
         "username": "",
-        "email": ""
+        "email": "",
+        "role": ""
     }
 
     try:
         with open("data/users.txt", "r") as f:
             for line in f:
                 parts = line.strip().split(",")
-                if len(parts) >= 5 and parts[0] == student.user_id:
-                    # Format: user_id, username, name, email, role
-                    user_data["username"] = parts[1]
-                    student.name = parts[2]  # Correct full name
-                    user_data["email"] = parts[3]
-                    student.role = parts[4]
+                if len(parts) >= 4 and parts[0] == student.user_id:
+                    user_data["username"] = parts[0]
+                    student.name = parts[1]
+                    user_data["email"] = parts[2]
+                    user_data["role"] = parts[3]
                     break
     except FileNotFoundError:
         messagebox.showerror("Error", "User data file not found.")
@@ -30,24 +29,18 @@ def open_student_dashboard(student):
 
     def view_profile():
         info = (
-            f"ID: {student.user_id}\n"
             f"Username: {user_data['username']}\n"
-            f"Name: {student.name}\n"
+            f"Full Name: {student.name}\n"
             f"Email: {user_data['email']}\n"
-            f"Role: {student.role}"
+            f"Role: {user_data['role']}"
         )
         messagebox.showinfo("Profile Info", info)
 
     def update_profile():
         update_window = tk.Toplevel(root)
         update_window.title("Update Profile")
-        update_window.geometry("300x250")
+        update_window.geometry("300x200")
         update_window.grab_set()
-
-        tk.Label(update_window, text="Username:").pack(pady=(10, 0))
-        username_entry = tk.Entry(update_window)
-        username_entry.insert(0, user_data["username"])
-        username_entry.pack()
 
         tk.Label(update_window, text="Full Name:").pack(pady=(10, 0))
         name_entry = tk.Entry(update_window)
@@ -60,20 +53,17 @@ def open_student_dashboard(student):
         email_entry.pack()
 
         def save_updates():
-            new_username = username_entry.get().strip()
             new_name = name_entry.get().strip()
             new_email = email_entry.get().strip()
 
-            if not new_username or not new_name or not new_email:
+            if not new_name or not new_email:
                 messagebox.showerror("Error", "All fields are required.")
                 return
 
-            # Update local values
-            user_data["username"] = new_username
-            user_data["email"] = new_email
             student.name = new_name
+            user_data["email"] = new_email
 
-            # Update file properly (match by user_id)
+            updated = False
             try:
                 with open("data/users.txt", "r") as f:
                     lines = f.readlines()
@@ -81,13 +71,18 @@ def open_student_dashboard(student):
                 with open("data/users.txt", "w") as f:
                     for line in lines:
                         parts = line.strip().split(",")
-                        if parts[0] == student.user_id:
-                            updated_line = f"{student.user_id},{new_username},{new_name},{new_email},{student.role}\n"
-                            f.write(updated_line)
+                        if len(parts) >= 4 and parts[0] == user_data["username"]:
+                            new_line = f"{user_data['username']},{new_name},{new_email},{user_data['role']}\n"
+                            f.write(new_line)
+                            updated = True
                         else:
                             f.write(line)
-                messagebox.showinfo("Success", "Profile updated successfully!")
-                update_window.destroy()
+
+                if updated:
+                    messagebox.showinfo("Success", "Profile updated successfully!")
+                    update_window.destroy()
+                else:
+                    messagebox.showerror("Error", "User ID not found. No changes made.")
 
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to update profile: {e}")
