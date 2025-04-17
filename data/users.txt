@@ -1,0 +1,5 @@
+admin,Admin User,admin@example.com,admin
+sub,Subodh Kakshapati,sub@gmail.com,student
+a,a,a,admin
+s,subodh,SSSS,student
+sub1,Subodh,subodh@gmail.com,student
